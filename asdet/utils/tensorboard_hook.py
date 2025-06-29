@@ -141,15 +141,15 @@ class TensorboardHook(Hook):
 
         for i, output in enumerate(outputs):
             if output.eval_ann_info is not None:
-                gt_bbox = output.eval_ann_info['gt_bboxes_3d'].tensor  # object_num, 7
+                gt_bbox = output.eval_ann_info['gt_bboxes_3d'].tensor[:, :7]  # object_num, 7
             else:
-                gt_bbox = output.gt_instances_3d.bboxes_3d.tensor
+                gt_bbox = output.gt_instances_3d.bboxes_3d.tensor[:, :7]
             if gt_bbox.shape[0] > len(self.eval_recorder.get('gt_bbox', [])) or len(self.eval_recorder) == 0:
                 self.eval_recorder = {
                     'input_points': data_batch['inputs']['points'][i],
-                    'gt_bbox': gt_bbox,
+                    'gt_bbox': gt_bbox[:, :7],
                     'pred_labels': output.pred_instances_3d.labels_3d.detach().cpu(),
-                    'pred_bboxes': output.pred_instances_3d.bboxes_3d.detach().cpu().tensor,  # object_num, 7
+                    'pred_bboxes': output.pred_instances_3d.bboxes_3d.detach().cpu().tensor[:, :7],  # object_num, 7
                     'pred_scores': output.pred_instances_3d.scores_3d.detach().cpu(),
                     'key_points': getattr(output.pred_instances_3d, 'key_points', torch.tensor([])).detach().cpu(),
                 }

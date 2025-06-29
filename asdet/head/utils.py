@@ -1,5 +1,7 @@
 import torch
 from torch import Tensor
+from functools import lru_cache
+from mmdet3d.structures.bbox_3d import LiDARInstance3DBoxes
 
 
 def _topk_1d(scores: Tensor, batch_size: int, batch_idx: Tensor, obj: Tensor, K: int = 40, nuscenes: bool = False):
@@ -48,3 +50,34 @@ def gather_feat_idx(feats: Tensor, inds: Tensor, batch_size: int, batch_idx: Ten
     feats = torch.stack(feats_list)
     return feats
 
+
+@lru_cache()
+def make_arange_tensor(end, device) -> Tensor:
+    return torch.arange(end, device=device)
+
+
+def judge_points_in_boxes(points: Tensor, bboxes_3d: LiDARInstance3DBoxes) -> Tensor:
+    """
+    judge which bbox the point is located in
+
+    Args:
+        points: (N, 3)
+        bboxes_3d: (K,)
+
+    Returns:
+        (N, K)
+    """
+    corners = bboxes_3d.corners  # (K, 8, 3)
+
+    min_z = corners[..., -1].min(1, keepdim=True)[0].T  # (1, K)
+    max_z = corners[..., -1].max(1, keepdim=True)[0].T  # (1, K)
+    inlier_z = (min_z <= points[:, 2:3]) & (points[:, 2:3] <= max_z)  # (N, K)
+
+    A, B, C = corners[:, 0, :2][None], corners[:, 2, :2][None], corners[:, 4, :2][None]  # (1, K, 2)
+    P = points[:, :2].unsqueeze(1)  # (N, 1, 2)
+    AB, AC = B - A, C - A
+    PA, PB, PC = A - P, B - P, C - P  # (N, K, 2)
+    inlier_xy = (((PA * AB).sum(-1) * (PB * AB).sum(-1)) <= 0) & (((PA * AC).sum(-1) * (PC * AC).sum(-1)) <= 0)
+
+    inlier_mask = inlier_xy & inlier_z  # (N, K)
+    return inlier_mask

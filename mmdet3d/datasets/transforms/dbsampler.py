@@ -237,7 +237,7 @@ class DataBaseSampler(object):
                               np.sum([n == class_label for n in gt_labels]))
             sampled_num = np.round(self.rate * sampled_num).astype(np.int64)
             if self.random_num and sampled_num > 0:
-                # 随机选择粘贴数量
+                # randomly set the number of pastes
                 sampled_num = random.randint(1, sampled_num.item())
 
             sampled_num_dict[class_name] = sampled_num

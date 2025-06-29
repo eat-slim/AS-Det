@@ -364,8 +364,7 @@ class AnchorFreeSimpleBBoxCoder:
         self.with_rot = with_rot
         self.with_vel = with_vel
 
-    def encode(self, gt_bboxes_3d: BaseInstance3DBoxes, gt_labels_3d: Tensor, seed_xyz: Tensor,
-               return_centerness: bool = True) -> tuple:
+    def encode(self, gt_bboxes_3d: BaseInstance3DBoxes, gt_labels_3d: Tensor, seed_xyz: Tensor) -> tuple:
         """Encode ground truth to prediction targets.
 
         Args:
@@ -388,14 +387,9 @@ class AnchorFreeSimpleBBoxCoder:
         # generate dir target
         dir_res_target = self.encode_angle(gt_bboxes_3d.yaw)
 
-        # generate classification target @ centerness target
+        # generate classification target
         cls_target = gt_labels_3d
-        if return_centerness:
-            centerness_target = \
-                get_centerness_target(seed_xyz.detach(), center_target, size_target, gt_bboxes_3d, obj_scores=None)
-            ret_list = [cls_target, centerness_target, center_offset_target, size_target, dir_res_target]
-        else:
-            ret_list = [cls_target, center_offset_target, size_target, dir_res_target]
+        ret_list = [cls_target, center_offset_target, size_target, dir_res_target]
 
         if self.with_vel:
             velocity_target = gt_bboxes_3d.tensor[:, -2:]
@@ -520,8 +514,7 @@ class AnchorFreeNusBBoxCoder(AnchorFreeSimpleBBoxCoder):
         super().__init__(with_rot, with_vel)
         self.absolute_height = absolute_height
 
-    def encode(self, gt_bboxes_3d: BaseInstance3DBoxes, gt_labels_3d: Tensor, seed_xyz: Tensor,
-               return_centerness: bool = True) -> tuple:
+    def encode(self, gt_bboxes_3d: BaseInstance3DBoxes, gt_labels_3d: Tensor, seed_xyz: Tensor) -> tuple:
         """Encode ground truth to prediction targets.
 
         Args:
@@ -544,14 +537,9 @@ class AnchorFreeNusBBoxCoder(AnchorFreeSimpleBBoxCoder):
         # generate dir target
         dir_res_target = self.encode_angle(gt_bboxes_3d.yaw)
 
-        # generate classification target @ centerness target
+        # generate classification target
         cls_target = gt_labels_3d
-        if return_centerness:
-            centerness_target = \
-                get_centerness_target(seed_xyz.detach(), center_target, size_target, gt_bboxes_3d, obj_scores=None)
-            ret_list = [cls_target, centerness_target, center_offset_target, size_target, dir_res_target]
-        else:
-            ret_list = [cls_target, center_offset_target, size_target, dir_res_target]
+        ret_list = [cls_target, center_offset_target, size_target, dir_res_target]
 
         if self.with_vel:
             velocity_target = gt_bboxes_3d.tensor[:, -2:]

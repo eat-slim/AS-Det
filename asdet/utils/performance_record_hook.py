@@ -33,8 +33,12 @@ class PerformanceRecordHook(Hook):
         if self.best_performance is None or this_performance >= self.best_performance:
             self.best_performance = this_performance
             self.best_performance_all = (runner.epoch, metrics)
+            runner.logger.info(f'Found a new best performance with {this_performance:.4f} {self.key}')
 
     def after_train(self, runner):
+        if self.best_performance is None:
+            return
+
         performance_str = ''
         for label, metric in self.best_performance_all[1].items():
             performance_str += f'{label.split("/")[-1]}: {metric:.4f}\n'

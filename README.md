@@ -63,6 +63,9 @@ pip install -r requirements.txt
 #### KITTI
 Please download and process the KITTI dataset following [here](https://mmdetection3d.readthedocs.io/en/latest/advanced_guides/datasets/kitti.html).
 
+#### nuScenes
+Please download and process the nuScenes dataset following [here](https://mmdetection3d.readthedocs.io/en/latest/advanced_guides/datasets/nuscenes.html).
+
 **You can place the processed dataset folder anywhere you want, 
 just remember to adjust the ```data_root``` parameter 
 in the dataset config file (e.g. ```configs/_base_/datasets/kitti-3d.py```) accordingly.**
@@ -74,16 +77,31 @@ To train AS-Det on KITTI dataset, simply run the training script:
 CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/asdet/asdet_1xb16_kitti-3d.py --work-dir log_train/asdet_1xb16_kitti-3d
 ```
 
+To train AS-Det on nuScenes dataset, utilize multiple GPUs for parallel training (DDP) to keep the batch size:
+```shell
+CUDA_VISIBLE_DEVICES=0,1,2,3 ./tools/dist_train.sh configs/asdet/asdet_4xb4_nus-3d.py 4 --work-dir log_train/asdet_4xb4_nus-3d
+```
+
 ## Testing
-To test AS-Det on KITTI dataset, you must provide a checkpoint and run the testing script:
+To test AS-Det, you must provide a checkpoint corresponding to the config file.  
+e.g.:
 ```shell
 CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/asdet/asdet_1xb16_kitti-3d.py /PATH/TO/CHECKPOINT --work-dir log_test/asdet_1xb16_kitti-3d
+```
+
+
+## Utils
+
+### Tensorboard  
+Tensorboard is supported by default. Run the script and access the visual log page using browser.
+```shell
+tensorboard --logdir=log_tb --port 6006  
 ```
 
 ## TODO list
  - [X] release main code
  - [X] release code for KITTI
- - [ ] release code for nuScenes
+ - [X] release code for nuScenes
  - [ ] release code for VoD
 
 

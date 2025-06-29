@@ -22,6 +22,8 @@ class VisualTestHook(Hook):
         self.interval = interval
 
     def before_test(self, runner) -> None:
+        if runner.rank != 0:
+            return
         if self.root == 'auto':
             self.root = os.path.join(runner.work_dir, 'visualization')
         self.image_dir = os.path.join(self.root, 'image')
@@ -31,19 +33,19 @@ class VisualTestHook(Hook):
         runner.logger.info(f'Visual records will be saved to {self.root}.')
 
     def after_test_iter(self, runner, batch_idx: int, data_batch: DATA_BATCH = None, outputs: Optional[Sequence] = None):
+        if runner.rank != 0:
+            return
         if (batch_idx + 1) % self.interval != 0:
             return
 
-        # input_path = os.path.basename(data_batch['data_samples'][0].img_path[0])
-        # input_name = input_path.split('.')[0]
         if isinstance(data_batch, list):
             data_batch = data_batch[0]
         input_path = os.path.basename(data_batch['data_samples'][0].lidar_path)
         input_name = input_path[:input_path.rfind('.')]
         if outputs[0].eval_ann_info is not None:
-            gt_bbox = outputs[0].eval_ann_info['gt_bboxes_3d'].tensor  # object_num, 7
+            gt_bbox = outputs[0].eval_ann_info['gt_bboxes_3d'].tensor[:, :7]  # object_num, 7
         elif len(outputs[0].gt_instances_3d) > 0:
-            gt_bbox = outputs[0].gt_instances_3d.bboxes_3d.tensor
+            gt_bbox = outputs[0].gt_instances_3d.bboxes_3d.tensor[:, :7]
         else:
             gt_bbox = []
         test_recorder = {
@@ -51,7 +53,7 @@ class VisualTestHook(Hook):
             'input_points': data_batch['inputs']['points'][0].cpu(),
             'gt_bbox': gt_bbox.cpu(),
             'pred_labels': outputs[0].pred_instances_3d.labels_3d.detach().cpu(),
-            'pred_bboxes': outputs[0].pred_instances_3d.bboxes_3d.detach().cpu().tensor,  # object_num, 7
+            'pred_bboxes': outputs[0].pred_instances_3d.bboxes_3d.detach().cpu().tensor[:, :7],  # object_num, 7
             'pred_scores': outputs[0].pred_instances_3d.scores_3d.detach().cpu(),
             'key_points': getattr(outputs[0].pred_instances_3d.detach().cpu(), 'key_points', torch.tensor([])).detach().cpu(),
         }

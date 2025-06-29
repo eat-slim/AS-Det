@@ -20,6 +20,7 @@ from mmdet3d.registry import MODELS, TASK_UTILS
 from mmdet3d.structures import BaseInstance3DBoxes, Det3DDataSample
 from mmdet3d.structures.bbox_3d import DepthInstance3DBoxes, LiDARInstance3DBoxes
 from asdet.loss.fkl_div import focal_kl_div
+from .utils import judge_points_in_boxes
 
 
 class BaseASHead(BaseModule):
@@ -45,7 +46,7 @@ class BaseASHead(BaseModule):
     def __init__(self,
                  num_classes: int,
                  bbox_coder: Union[ConfigDict, dict],
-                 proposal_coder: Union[ConfigDict, dict],
+                 proposal_coder: Union[ConfigDict, dict] = None,
                  train_cfg: Optional[dict] = None,
                  test_cfg: Optional[dict] = None,
                  objectness_loss: Optional[dict] = None,
@@ -61,16 +62,15 @@ class BaseASHead(BaseModule):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
-        self.loss_objectness = MODELS.build(objectness_loss)
-        self.loss_center = MODELS.build(center_loss)
-        self.loss_dir_res = MODELS.build(dir_res_loss)
-        self.loss_dir_class = MODELS.build(dir_class_loss)
-        self.loss_size_res = MODELS.build(size_res_loss)
-        self.loss_corner = MODELS.build(corner_loss)
+        self.loss_objectness = MODELS.build(objectness_loss) if objectness_loss else None
+        self.loss_center = MODELS.build(center_loss) if center_loss else None
+        self.loss_dir_res = MODELS.build(dir_res_loss) if dir_res_loss else None
+        self.loss_dir_class = MODELS.build(dir_class_loss) if dir_class_loss else None
+        self.loss_size_res = MODELS.build(size_res_loss) if size_res_loss else None
+        self.loss_corner = MODELS.build(corner_loss) if corner_loss else None
 
-        self.proposal_coder = TASK_UTILS.build(proposal_coder)
+        self.proposal_coder = TASK_UTILS.build(proposal_coder) if proposal_coder else None
         self.bbox_coder = TASK_UTILS.build(bbox_coder)
-        self.num_dir_bins = self.bbox_coder.num_dir_bins
 
         self.figure_tobe_show_in_tensorboard = None
 
@@ -523,7 +523,7 @@ class BaseASHead(BaseModule):
         # Bbox classification and regression
         # (center residual (3), size regression (3)
         # heading class+residual (num_dir_bins*2)),
-        return 3 + 3 + self.num_dir_bins * 2
+        return 3 + 3 + self.bbox_coder.num_dir_bins * 2
 
     def _extract_input(self, feat_dict: dict) -> Tuple:
         """Extract inputs from features dictionary.
@@ -542,29 +542,3 @@ class BaseASHead(BaseModule):
 
         return seed_points, seed_features, seed_indices
 
-
-def judge_points_in_boxes(points: Tensor, bboxes_3d: LiDARInstance3DBoxes) -> Tensor:
-    """
-    judge which bbox the point is located in
-
-    Args:
-        points: (N, 3)
-        bboxes_3d: (K,)
-
-    Returns:
-        (N, K)
-    """
-    corners = bboxes_3d.corners  # (K, 8, 3)
-
-    min_z = corners[..., -1].min(1, keepdim=True)[0].T  # (1, K)
-    max_z = corners[..., -1].max(1, keepdim=True)[0].T  # (1, K)
-    inlier_z = (min_z <= points[:, 2:3]) & (points[:, 2:3] <= max_z)  # (N, K)
-
-    A, B, C = corners[:, 0, :2][None], corners[:, 2, :2][None], corners[:, 4, :2][None]  # (1, K, 2)
-    P = points[:, :2].unsqueeze(1)  # (N, 1, 2)
-    AB, AC = B - A, C - A
-    PA, PB, PC = A - P, B - P, C - P  # (N, K, 2)
-    inlier_xy = (((PA * AB).sum(-1) * (PB * AB).sum(-1)) <= 0) & (((PA * AC).sum(-1) * (PC * AC).sum(-1)) <= 0)
-
-    inlier_mask = inlier_xy & inlier_z  # (N, K)
-    return inlier_mask

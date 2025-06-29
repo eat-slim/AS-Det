@@ -13,7 +13,7 @@ from mmdet3d.models.dense_heads.base_conv_bbox_head import BaseConvBboxHead
 from mmdet3d.registry import MODELS
 from mmdet3d.structures import BaseInstance3DBoxes, Det3DDataSample
 from asdet.backbone.modules import SetAbstractionMSG
-from asdet.head.base_head import BaseASHead
+from .base_head import BaseASHead
 
 
 @MODELS.register_module()

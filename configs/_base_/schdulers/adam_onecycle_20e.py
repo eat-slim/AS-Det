@@ -1,6 +1,6 @@
 lr = 0.001
 wd = 0.01
-max_epochs = 80
+max_epochs = 20
 val_interval = 2
 
 # learning rate / momentum schedule
@@ -48,7 +48,7 @@ optim_wrapper = dict(
     clip_grad=dict(max_norm=35, norm_type=2),
 )
 
-# training schedule for 80 epoch
+# training schedule for 20 epoch
 train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=max_epochs, val_interval=val_interval)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
