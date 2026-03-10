@@ -67,6 +67,7 @@ class ASMSCFAHead(BaseASHead):
             size_res_loss=size_res_loss,
             corner_loss=corner_loss,
             init_cfg=init_cfg)
+        self.num_dir_bins = self.bbox_coder.num_dir_bins
 
         if vote_limit is None:
             self.vote_limit = (math.inf, math.inf, math.inf)

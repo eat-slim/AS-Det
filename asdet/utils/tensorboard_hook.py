@@ -59,8 +59,15 @@ class TensorboardHook(Hook):
         for i, lr in enumerate(lr_list[1:]):
             self.writer.add_scalar(f"runtime/learning_rate{i+2}", lr, runner.epoch)
 
-        if 'momentum' in runner.param_schedulers[0].optimizer.param_groups[0].keys():
-            mom_list = sorted(list(set([i['momentum'] for i in runner.param_schedulers[0].optimizer.param_groups])), reverse=True)
+        param_groups_keys = runner.param_schedulers[0].optimizer.param_groups[0].keys()
+        if 'momentum' in param_groups_keys or 'betas' in param_groups_keys:
+            mom_list = []
+            for i in runner.param_schedulers[0].optimizer.param_groups:
+                if 'momentum' in i.keys():
+                    mom_list.append(i['momentum'])
+                elif 'betas' in i.keys():
+                    mom_list.append(i['betas'][0])
+            mom_list = sorted(list(set(mom_list)), reverse=True)
             self.writer.add_scalar("runtime/momentum", mom_list[0], runner.epoch)
             for i, mom in enumerate(mom_list[1:]):
                 self.writer.add_scalar(f"runtime/momentum{i+2}", mom, runner.epoch)

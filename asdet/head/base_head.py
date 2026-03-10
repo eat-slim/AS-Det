@@ -191,7 +191,7 @@ class BaseASHead(BaseModule):
                 gt_distribution = torch.log((gt_logits / gt_logits.sum().clamp(min=1e-8)).clamp(min=1e-8))
 
                 # FKL
-                loss = focal_kl_div(sampling_distribution, gt_distribution, log_target=True, eps=1e-8)
+                loss = focal_kl_div(sampling_distribution, gt_distribution, log_target=True, eps=1e-7)
                 if is_valid_loss:
                     as_loss[as_index].append(loss)
 

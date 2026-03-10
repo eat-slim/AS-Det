@@ -52,7 +52,15 @@ pip install "git+https://github.com/facebookresearch/pytorch3d.git"  # for other
 You can also find more guidance from their [offcial document](https://github.com/facebookresearch/pytorch3d/blob/main/INSTALL.md).
 
 
-**Step 5.** Install other requirements.
+**Step 5.** Install Muon optimizer.
+
+Recommend utilizing the muon optimizer to achieve more stable results.
+```shell
+pip install git+https://github.com/KellerJordan/Muon
+```
+
+
+**Step 6.** Install other requirements.
 
 ```shell
 pip install -r requirements.txt
@@ -75,6 +83,10 @@ in the dataset config file (e.g. ```configs/_base_/datasets/kitti-3d.py```) acco
 To train AS-Det on KITTI dataset, simply run the training script:
 ```shell
 CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/asdet/asdet_1xb16_kitti-3d.py --work-dir log_train/asdet_1xb16_kitti-3d
+```
+Alternatively, you can focus on a single category to achieve better single-class detection performance. We provide a modified example that detects only the '_Car_' category:
+```shell
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/asdet/asdet_1xb16_kitti-3d_car.py --work-dir log_train/asdet_1xb16_kitti-3d_car
 ```
 
 To train AS-Det on nuScenes dataset, utilize multiple GPUs for parallel training (DDP) to keep the batch size:

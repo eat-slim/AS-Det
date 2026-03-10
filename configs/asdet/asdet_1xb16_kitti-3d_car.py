@@ -1,6 +1,6 @@
 _base_ = [
     '../_base_/models/asdet_kitti.py',
-    '../_base_/datasets/kitti-3d.py',
+    '../_base_/datasets/kitti-3d-car.py',
     '../_base_/schedulers/muon_onecycle_80e.py',
     '../_base_/default_runtime.py'
 ]
@@ -24,7 +24,7 @@ optim_wrapper = dict(
 )
 
 
-class_names = ['Car', 'Pedestrian', 'Cyclist']
+class_names = ['Car']
 mean_size = dict(Car=[3.9, 1.6, 1.56], Pedestrian=[0.8, 0.6, 1.73], Cyclist=[1.76, 0.6, 1.73])
 
 
@@ -62,11 +62,11 @@ visualizer = dict(
 
 default_hooks = dict(
     checkpoint=dict(type='CheckpointHook', interval=ckpt_interval,
-                    save_best='Kitti metric/pred_instances_3d/KITTI/Overall_3D_AP40_moderate', rule='greater'),
+                    save_best='Kitti metric/pred_instances_3d/KITTI/Car_3D_AP40_moderate_strict', rule='greater'),
     logger=dict(type='LoggerHook', interval=50))
 custom_hooks = [
     dict(type='TensorboardHook', root='auto', interval=10, metric_format='kitti'),
-    dict(type='PerformanceRecordHook', key='Overall_3D_AP40_moderate'),
+    dict(type='PerformanceRecordHook', key='Car_3D_AP40_moderate_strict'),
     dict(type='VisualTestHook', root='auto', interval=1000),
 ]
 randomness = dict(seed=3407)

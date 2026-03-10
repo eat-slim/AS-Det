@@ -1,7 +1,7 @@
 _base_ = [
     '../_base_/models/asdet_cbg_nus.py',
     '../_base_/datasets/nus-3d.py',
-    '../_base_/schdulers/adam_onecycle_20e.py',
+    '../_base_/schedulers/muon_onecycle_20e.py',
     '../_base_/default_runtime.py'
 ]
 
@@ -15,6 +15,12 @@ persistent_workers = True
 ckpt_interval = 2
 sync_bn = 'torch'
 
+# optimizer
+optim_wrapper = dict(
+    optimizer=dict(
+        min_hidden_dims=16,
+    ),
+)
 
 tasks = [
     dict(class_names=['car']),
